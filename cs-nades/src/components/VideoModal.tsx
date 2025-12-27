@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { NadeSpot } from "../data/spots"
 import { getPublicVideoUrl } from "../lib/storage"
 
@@ -13,6 +13,10 @@ export default function VideoModal({
     () => (spot ? getPublicVideoUrl(spot.videoPath) : ""),
     [spot]
   )
+
+  // ✅ STEP 2: put these here (inside VideoModal, before the return)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   if (!spot) return null
 
@@ -62,10 +66,9 @@ export default function VideoModal({
           </button>
         </div>
 
-        {/* Debug: show url */}
-        <div style={{ padding: "0 14px 10px", fontSize: 12, opacity: 0.7, wordBreak: "break-all" }}>
-          {videoUrl ? `URL: ${videoUrl}` : "No video URL (check Supabase env/bucket/path)."}
-        </div>
+        {/* ✅ STEP 2: render status right above the video */}
+        {loading && <div style={{ padding: "0 14px 10px", fontSize: 12, opacity: 0.8 }}>Loading…</div>}
+        {error && <div style={{ padding: "0 14px 10px", fontSize: 12, color: "#ff7b7b" }}>{error}</div>}
 
         {videoUrl && (
           <video
@@ -76,7 +79,18 @@ export default function VideoModal({
             playsInline
             preload="metadata"
             style={{ width: "100%", height: 480, background: "black", objectFit: "contain" }}
-            onError={() => console.error("Video failed to load:", videoUrl)}
+
+            // ✅ STEP 2: handlers go on the <video> tag
+            onLoadStart={() => {
+              setLoading(true)
+              setError(null)
+            }}
+            onCanPlay={() => setLoading(false)}
+            onError={() => {
+              setLoading(false)
+              setError("Video failed to load.")
+              console.error("Video failed to load:", videoUrl)
+            }}
           />
         )}
       </div>
