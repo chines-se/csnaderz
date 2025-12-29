@@ -14,6 +14,7 @@ import {
 } from "react-konva"
 import type Konva from "konva"
 import type { NadeSpot, Stroke, NadeType } from "../data/types"
+import useDrawing from "./useDrawing"
 
 function useImage(url: string) {
   const [img, setImg] = useState<HTMLImageElement | null>(null)
@@ -133,7 +134,7 @@ export default function KonvaMap({
   gridSize?: number
 
   strokes: Stroke[]
-  setStrokes: (next: Stroke[]) => void
+  setStrokes: React.Dispatch<React.SetStateAction<Stroke[]>>
 
   onSelectSpot: (spot: NadeSpot) => void
   onPlaceSpot: (payload: { x: number; y: number; type: NadeType }) => void
@@ -153,9 +154,6 @@ export default function KonvaMap({
   const stageScale = baseScale * zoomFactor
 
   const [tooltip, setTooltip] = useState<TooltipState>({ visible: false })
-
-  // drawing state
-  const [isDrawing, setIsDrawing] = useState(false)
 
   const clampStagePos = (pos: { x: number; y: number }, scale: number) => {
     const mapPx = nativeSize * scale
@@ -186,6 +184,14 @@ export default function KonvaMap({
       y: (pointer.y - stagePos.y) / stageScale,
     }
   }
+
+  const { liveStroke, handlePointerDown, handlePointerMove, handlePointerUp } = useDrawing({
+    mode,
+    nativeSize,
+    toNative,
+    strokes,
+    setStrokes,
+  })
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault()
@@ -226,7 +232,7 @@ export default function KonvaMap({
   }
 
   // Stage pointer handler: place or draw
-  const handlePointerDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+  const handlePointerDownEvent = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = stageRef.current
     if (!stage) return
 
@@ -235,13 +241,7 @@ export default function KonvaMap({
 
     // When drawing, start a stroke anywhere on map background
     if (mode === "draw") {
-      const p = toNative(pointer)
-      if (p.x < 0 || p.y < 0 || p.x > nativeSize || p.y > nativeSize) return
-
-      setIsDrawing(true)
-      const id = crypto.randomUUID()
-      const next: Stroke = { id, tool: "pen", width: 4, points: [p.x, p.y] }
-      setStrokes([...strokes, next])
+      handlePointerDown(stage)
       return
     }
 
@@ -258,24 +258,12 @@ export default function KonvaMap({
     }
   }
 
-  const handlePointerMove = () => {
-    if (mode !== "draw" || !isDrawing) return
-    const stage = stageRef.current
-    if (!stage) return
-    const pointer = stage.getPointerPosition()
-    if (!pointer) return
-
-    const p = toNative(pointer)
-    const last = strokes[strokes.length - 1]
-    if (!last) return
-
-    const nextLast = { ...last, points: [...last.points, p.x, p.y] }
-    const next = strokes.slice(0, -1).concat(nextLast)
-    setStrokes(next)
+  const handlePointerMoveEvent = () => {
+    handlePointerMove(stageRef.current)
   }
 
-  const handlePointerUp = () => {
-    if (mode === "draw") setIsDrawing(false)
+  const handlePointerUpEvent = () => {
+    handlePointerUp()
   }
 
   const resetView = () => {
@@ -309,12 +297,12 @@ export default function KonvaMap({
         onWheel={handleWheel}
         onMouseEnter={() => setCursor(mode === "place" ? "crosshair" : mode === "draw" ? "crosshair" : "grab")}
         onMouseLeave={() => setCursor("default")}
-        onMouseDown={handlePointerDown}
-        onMouseMove={handlePointerMove}
-        onMouseUp={handlePointerUp}
-        onTouchStart={handlePointerDown}
-        onTouchMove={handlePointerMove}
-        onTouchEnd={handlePointerUp}
+        onMouseDown={handlePointerDownEvent}
+        onMouseMove={handlePointerMoveEvent}
+        onMouseUp={handlePointerUpEvent}
+        onTouchStart={handlePointerDownEvent}
+        onTouchMove={handlePointerMoveEvent}
+        onTouchEnd={handlePointerUpEvent}
       >
         <Layer>
           {/* Background in native coords */}
@@ -327,7 +315,7 @@ export default function KonvaMap({
           <KonvaImage name="map" image={img ?? undefined} x={0} y={0} width={nativeSize} height={nativeSize} />
 
           {/* Drawings layer */}
-          {strokes.map((s) => (
+          {[...strokes, ...(liveStroke ? [liveStroke] : [])].map((s) => (
             <Line
               key={s.id}
               points={s.points}
@@ -335,7 +323,7 @@ export default function KonvaMap({
               strokeWidth={s.width}
               lineCap="round"
               lineJoin="round"
-              tension={0}
+              tension={0.4}
               listening={false}
               opacity={0.9}
             />
