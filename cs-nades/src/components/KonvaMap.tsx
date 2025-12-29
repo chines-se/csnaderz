@@ -249,7 +249,7 @@ export default function KonvaMap({
     if (mode === "place") {
       const target = e.target
       const n = (target as any).name?.() as string | undefined
-      const isBackground = n === "map" || n === "bg"
+      const isBackground = n
       if (!isBackground) return
 
       const p = toNative(pointer)
