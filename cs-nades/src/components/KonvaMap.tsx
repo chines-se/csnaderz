@@ -1,3 +1,6 @@
+/**
+ * Konva-based map viewport with marker placement, editing, and drawing support.
+ */
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
   Stage,
@@ -16,6 +19,9 @@ import type Konva from "konva"
 import type { NadeSpot, Stroke, NadeType } from "../data/types"
 import useDrawing from "./useDrawing"
 
+/**
+ * Load an image element and expose both the element and error state.
+ */
 function useImage(url: string) {
   const [img, setImg] = useState<HTMLImageElement | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -43,10 +49,16 @@ type TooltipState =
   | { visible: true; x: number; y: number; title: string; type: NadeType }
   | { visible: false }
 
+/**
+ * Clamp a number into an inclusive range.
+ */
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
 
+/**
+ * Convert a nade type into a short uppercase label for UI rendering.
+ */
 function typeLabel(t: NadeType) {
   switch (t) {
     case "smoke":
@@ -60,10 +72,16 @@ function typeLabel(t: NadeType) {
   }
 }
 
+/**
+ * Snap a numeric value to the nearest grid intersection.
+ */
 function snapValue(v: number, grid: number) {
   return Math.round(v / grid) * grid
 }
 
+/**
+ * Choose a marker shape based on the nade type.
+ */
 function MarkerShape({ type, size }: { type: NadeType; size: number }) {
   if (type === "smoke") return <Circle radius={size} fill="white" stroke="black" strokeWidth={2} />
   if (type === "flash")
@@ -102,6 +120,16 @@ function MarkerShape({ type, size }: { type: NadeType; size: number }) {
   )
 }
 
+/**
+ * Render an interactive map with markers and drawing overlays.
+ *
+ * Inputs:
+ * - mapImageUrl: URL to the map image asset
+ * - width/height: stage size in pixels
+ * - nativeSize: map coordinate space size (used for normalization)
+ * - spots: marker list to render
+ * - callbacks: selection, placement, movement, and deletion handlers
+ */
 export default function KonvaMap({
   mapImageUrl,
   width,
@@ -147,7 +175,7 @@ export default function KonvaMap({
   const { img, error } = useImage(mapImageUrl)
   const stageRef = useRef<Konva.Stage | null>(null)
 
-  // baseScale makes nativeSize fit width at zoomFactor=1
+  // baseScale makes nativeSize fit width at zoomFactor=1.
   const baseScale = useMemo(() => width / nativeSize, [width, nativeSize])
   const [zoomFactor, setZoomFactor] = useState(1)
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 })
@@ -155,6 +183,9 @@ export default function KonvaMap({
 
   const [tooltip, setTooltip] = useState<TooltipState>({ visible: false })
 
+  /**
+   * Clamp the stage position so the map never drifts out of view.
+   */
   const clampStagePos = (pos: { x: number; y: number }, scale: number) => {
     const mapPx = nativeSize * scale
 
@@ -178,6 +209,9 @@ export default function KonvaMap({
     stage.container().style.cursor = cursor
   }
 
+  /**
+   * Convert stage coordinates into map-native coordinates.
+   */
   const toNative = (pointer: { x: number; y: number }) => {
     return {
       x: (pointer.x - stagePos.x) / stageScale,
@@ -202,12 +236,15 @@ export default function KonvaMap({
     if (!pointer) return
 
     const oldScale = stageScale
+    // Subtle zoom step keeps wheel zoom from feeling too aggressive.
     const scaleBy = 1.08
+    // Trackpad scroll down should zoom out (deltaY > 0).
     const direction = e.evt.deltaY > 0 ? -1 : 1
 
     const nextZoom = clamp(direction > 0 ? zoomFactor * scaleBy : zoomFactor / scaleBy, minZoom, maxZoom)
     const newScale = baseScale * nextZoom
 
+    // Calculate the point under the cursor in map space so we can zoom around it.
     const mousePointTo = {
       x: (pointer.x - stagePos.x) / oldScale,
       y: (pointer.y - stagePos.y) / oldScale,
@@ -226,6 +263,7 @@ export default function KonvaMap({
     const stage = e.target.getStage()
     if (!stage) return
     const pos = stage.position()
+    // Clamp the stage to avoid blank margins when dragging.
     const clamped = clampStagePos(pos, stageScale)
     stage.position(clamped)
     setStagePos(clamped)
@@ -253,6 +291,7 @@ export default function KonvaMap({
       if (!isBackground) return
 
       const p = toNative(pointer)
+      // Ignore clicks outside of the image bounds.
       if (p.x < 0 || p.y < 0 || p.x > nativeSize || p.y > nativeSize) return
       onPlaceSpot({ x: p.x, y: p.y, type: placementType })
     }
@@ -331,6 +370,7 @@ export default function KonvaMap({
 
           {/* Markers */}
           {spots.map((spot) => {
+            // Marker size in native map units.
             const size = 12
 
             return (

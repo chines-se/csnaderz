@@ -1,3 +1,6 @@
+/**
+ * Static nade definitions used in the sample UI.
+ */
 export type NadeType = "smoke" | "flash" | "molotov" | "he"
 
 export type Nade = {
@@ -9,6 +12,7 @@ export type Nade = {
   image: string
 }
 
+// Example data for display-only lists.
 export const nades: Nade[] = [
   {
     id: "mirage-window",

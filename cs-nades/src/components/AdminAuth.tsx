@@ -1,6 +1,12 @@
+/**
+ * Inline admin authentication control for Supabase-backed sessions.
+ */
 import { useEffect, useState } from "react"
 import { supabase } from "../lib/supabase"
 
+/**
+ * Render a minimal sign-in/sign-out UI for admins.
+ */
 export default function AdminAuth() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -9,6 +15,7 @@ export default function AdminAuth() {
 
   useEffect(() => {
     if (!supabase) return
+    // Bootstrap current session and keep the email in sync with auth changes.
     supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null))
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setUserEmail(session?.user?.email ?? null)
@@ -16,6 +23,9 @@ export default function AdminAuth() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  /**
+   * Sign in with email/password using Supabase auth.
+   */
   async function signIn() {
     setErr("")
     if (!supabase) return
@@ -23,6 +33,9 @@ export default function AdminAuth() {
     if (error) setErr(error.message)
   }
 
+  /**
+   * Sign out the current Supabase session.
+   */
   async function signOut() {
     if (!supabase) return
     await supabase.auth.signOut()

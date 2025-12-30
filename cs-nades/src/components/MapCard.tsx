@@ -1,5 +1,11 @@
+/**
+ * Card-style link to a specific map page.
+ */
 import { Link } from "react-router-dom"
 
+/**
+ * Render a map card with a route to the map page.
+ */
 export default function MapCard({ map }: { map: string }) {
   return (
     <Link

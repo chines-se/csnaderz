@@ -1,5 +1,11 @@
+/**
+ * Error boundary for MapPage and related routes.
+ */
 import React from "react"
 
+/**
+ * Catches rendering errors and displays a fallback UI.
+ */
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error?: any }
@@ -9,10 +15,16 @@ export class ErrorBoundary extends React.Component<
     this.state = { hasError: false }
   }
 
+  /**
+   * Update state so the next render shows the fallback UI.
+   */
   static getDerivedStateFromError(error: any) {
     return { hasError: true, error }
   }
 
+  /**
+   * Render children or a crash summary if an error occurred.
+   */
   render() {
     if (this.state.hasError) {
       return (

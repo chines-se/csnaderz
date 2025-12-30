@@ -1,3 +1,6 @@
+/**
+ * Map detail page with interactive markers, drawing tools, and modals.
+ */
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import KonvaMap from "../components/KonvaMap"
@@ -9,6 +12,9 @@ import CreateNadeModal from "../components/CreateNadeModal"
 
 type Mode = "browse" | "place" | "edit" | "draw"
 
+/**
+ * Combine class names, ignoring falsy values.
+ */
 function cx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ")
 }
@@ -43,6 +49,9 @@ function ModeButton({
   )
 }
 
+/**
+ * Render the map page with tools, data loading, and modals.
+ */
 export default function MapPage() {
   type Pending = { x: number; y: number; type: NadeType } | null
 
@@ -90,6 +99,7 @@ export default function MapPage() {
    * - you don't get weird event scaling issues
    */
   const mapAreaRef = useRef<HTMLDivElement | null>(null)
+  // Stage size bounds keep the map readable on small and large screens.
   const MAX_STAGE = 900
   const MIN_STAGE = 320
   const [stageSize, setStageSize] = useState<number>(MAX_STAGE)
@@ -102,8 +112,8 @@ export default function MapPage() {
     const ro = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect?.width ?? MAX_STAGE
 
-      // Leave a little room so the stage doesn't touch the card edges
-      // (this accounts for padding/border in our layout)
+      // Leave a little room so the stage doesn't touch the card edges.
+      // (This accounts for padding/border in our layout.)
       const usable = Math.floor(width)
 
       // Clamp stage size between MIN and MAX
@@ -388,12 +398,13 @@ export default function MapPage() {
                   // Responsive stage size (scales down on smaller screens)
                   width={stageSize}
                   height={stageSize}
-                  // Keep nativeSize constant so stored coords remain consistent
+                  // Keep nativeSize constant so stored coords remain consistent.
                   nativeSize={1200}
                   spots={mapSpots}
                   mode={mode}
                   placementType={placementType}
                   snapToGrid={snap}
+                  // Grid size in native map units for snapping markers.
                   gridSize={20}
                   strokes={strokes}
                   setStrokes={setStrokes}

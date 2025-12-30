@@ -1,7 +1,13 @@
+/**
+ * Modal overlay for playing nade videos.
+ */
 import { useMemo, useState } from "react"
 import type { NadeSpot } from "../data/spots"
 import { getPublicVideoUrl } from "../lib/storage"
 
+/**
+ * Render a modal video player for the currently selected spot.
+ */
 export default function VideoModal({
   spot,
   onClose,
@@ -14,7 +20,7 @@ export default function VideoModal({
     [spot]
   )
 
-  // ✅ STEP 2: put these here (inside VideoModal, before the return)
+  // Track video loading state to show quick status feedback.
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -66,7 +72,7 @@ export default function VideoModal({
           </button>
         </div>
 
-        {/* ✅ STEP 2: render status right above the video */}
+        {/* Render status right above the video */}
         {loading && <div style={{ padding: "0 14px 10px", fontSize: 12, opacity: 0.8 }}>Loading…</div>}
         {error && <div style={{ padding: "0 14px 10px", fontSize: 12, color: "#ff7b7b" }}>{error}</div>}
 
@@ -80,7 +86,7 @@ export default function VideoModal({
             preload="metadata"
             style={{ width: "100%", height: 480, background: "black", objectFit: "contain" }}
 
-            // ✅ STEP 2: handlers go on the <video> tag
+            // Reset status at start of each load attempt.
             onLoadStart={() => {
               setLoading(true)
               setError(null)
@@ -89,6 +95,7 @@ export default function VideoModal({
             onError={() => {
               setLoading(false)
               setError("Video failed to load.")
+              // Log with the URL to simplify debugging storage issues.
               console.error("Video failed to load:", videoUrl)
             }}
           />

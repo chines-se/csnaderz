@@ -1,5 +1,9 @@
+/**
+ * Filter button row for selecting nade categories.
+ */
 import type { NadeType } from "../data/nades"
 
+// Include a synthetic "all" option for the list.
 const types: (NadeType | "all")[] = [
   "all",
   "smoke",
@@ -8,6 +12,9 @@ const types: (NadeType | "all")[] = [
   "he",
 ]
 
+/**
+ * Render filter buttons for nade type selection.
+ */
 export default function Filters({
   active,
   setActive,
@@ -17,7 +24,7 @@ export default function Filters({
 }) {
   return (
     <div className="flex gap-2 mb-6">
-      {types.map(type => (
+      {types.map((type) => (
         <button
           key={type}
           onClick={() => setActive(type)}
