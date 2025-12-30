@@ -1,5 +1,11 @@
+/**
+ * Card UI for presenting a single nade entry.
+ */
 import type { Nade } from "../data/nades"
 
+/**
+ * Render a nade preview with basic metadata.
+ */
 export default function NadeCard({ nade }: { nade: Nade }) {
   return (
     <div className="bg-zinc-900 rounded-xl overflow-hidden">

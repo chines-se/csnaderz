@@ -1,3 +1,6 @@
+/**
+ * Shared data contracts for nade spots and drawings.
+ */
 export type NadeType = "smoke" | "flash" | "molotov" | "he"
 
 export type NadeSpot = {
@@ -14,5 +17,6 @@ export type Stroke = {
   id: string
   tool: "pen"
   width: number
-  points: number[] // [x1,y1,x2,y2,...] in native coords
+  // [x1,y1,x2,y2,...] in native map coordinates.
+  points: number[]
 }

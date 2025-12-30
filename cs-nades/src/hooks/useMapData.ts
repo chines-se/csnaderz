@@ -1,13 +1,20 @@
+/**
+ * Supabase-backed data hook for map spots and drawings.
+ */
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "../lib/supabase"
 import type { NadeSpot, Stroke, NadeType } from "../data/types"
 
+/**
+ * Load and mutate map data (spots + drawings) for a single map slug.
+ */
 export function useMapData(map: string) {
   const [spots, setSpots] = useState<NadeSpot[]>([])
   const [strokes, setStrokes] = useState<Stroke[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
 
+  // Avoid querying until we have both a map and a configured client.
   const isReady = useMemo(() => !!supabase && !!map, [map])
 
   useEffect(() => {
@@ -29,6 +36,7 @@ export function useMapData(map: string) {
         return
       }
 
+      // Normalize DB field names into frontend-friendly keys.
       setSpots(
         (spotRows ?? []).map((r: any) => ({
           id: r.id,
@@ -64,6 +72,9 @@ export function useMapData(map: string) {
     }
   }, [isReady, map])
 
+  /**
+   * Create a new spot in Supabase and append it locally.
+   */
   async function addSpot(payload: {
     map: string
     type: NadeType
@@ -103,6 +114,7 @@ export function useMapData(map: string) {
 
   async function updateSpot(id: string, patch: Partial<Omit<NadeSpot, "id">>) {
     if (!supabase) return
+    // Build a DB patch object with snake_case keys for Supabase.
     const dbPatch: any = {}
     if (patch.map !== undefined) dbPatch.map = patch.map
     if (patch.type !== undefined) dbPatch.type = patch.type
@@ -124,6 +136,9 @@ export function useMapData(map: string) {
     setSpots((prev) => prev.filter((s) => s.id !== id))
   }
 
+  /**
+   * Persist drawing strokes for the map (upsert by map name).
+   */
   async function saveDrawings(nextStrokes: Stroke[]) {
     if (!supabase) return
     // upsert by map

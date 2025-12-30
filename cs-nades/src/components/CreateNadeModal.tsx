@@ -1,13 +1,20 @@
+/**
+ * Modal for creating a new nade spot with video upload and metadata.
+ */
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { NadeType } from "../data/types"
 import { supabase } from "../lib/supabase"
 
+// Storage bucket holding lineup videos.
 const BUCKET = "nade-videos"
 
-// Focusable selector for focus trap
+// Focusable selector for focus trap.
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
+/**
+ * Render a modal workflow for creating and uploading a nade video.
+ */
 export default function CreateNadeModal({
   open,
   map,
@@ -59,6 +66,7 @@ export default function CreateNadeModal({
       requestAnimationFrame(() => setVisible(true))
     } else {
       setVisible(false)
+      // Align the unmount with the exit animation duration.
       closeTimer.current = window.setTimeout(() => {
         setMounted(false)
       }, 220) // match duration below
@@ -77,6 +85,7 @@ export default function CreateNadeModal({
     const prevOverflow = body.style.overflow
     const prevPaddingRight = body.style.paddingRight
 
+    // Prevent layout shift when the scrollbar disappears.
     const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth
     body.style.overflow = "hidden"
     if (scrollBarWidth > 0) body.style.paddingRight = `${scrollBarWidth}px`
@@ -162,6 +171,9 @@ export default function CreateNadeModal({
 
   if (!mounted) return null
 
+  /**
+   * Upload the video file and call the creation callback with payload data.
+   */
   async function handleSubmit() {
     setErr("")
     if (!supabase) {
@@ -180,6 +192,7 @@ export default function CreateNadeModal({
     try {
       setSaving(true)
 
+      // Encode the file name to avoid spaces in storage paths.
       const safeName = file.name.replace(/\s+/g, "-")
       const path = `${map}/${type}/${Date.now()}-${safeName}`
 
@@ -219,6 +232,7 @@ export default function CreateNadeModal({
       aria-describedby="create-nade-desc"
       onMouseDown={(e) => {
         if (saving) return
+        // Allow clicking the overlay to close the modal.
         if (e.target === e.currentTarget) onClose()
       }}
     >

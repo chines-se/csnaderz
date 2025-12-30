@@ -1,3 +1,6 @@
+/**
+ * Drawing hook for Konva stages that captures freehand strokes with light smoothing.
+ */
 import { useRef, useState } from "react"
 import type Konva from "konva"
 import type { Stroke } from "../data/types"
@@ -14,6 +17,15 @@ type UseDrawingOptions = {
   smoothingWindow?: number
 }
 
+/**
+ * Capture freehand input and convert it into smoothed Konva stroke points.
+ *
+ * Inputs:
+ * - mode: current interaction mode
+ * - nativeSize: size of the map image in map coordinates
+ * - toNative: converts stage coordinates to map coordinates
+ * - strokes/setStrokes: persisted strokes to append to
+ */
 export default function useDrawing({
   mode,
   nativeSize,
@@ -27,6 +39,9 @@ export default function useDrawing({
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null)
   const currentStrokeRef = useRef<{ stroke: Stroke; rawPoints: number[] } | null>(null)
 
+  /**
+   * Begin a new stroke anchored at the current pointer location.
+   */
   const startStroke = (stage: Konva.Stage) => {
     const pointer = stage.getPointerPosition()
     if (!pointer) return
@@ -36,11 +51,15 @@ export default function useDrawing({
 
     setIsDrawing(true)
     const id = crypto.randomUUID()
+    // Keep raw points separately so smoothing can use the unsmoothed input.
     const next: Stroke = { id, tool: "pen", width: 4, points: [p.x, p.y] }
     currentStrokeRef.current = { stroke: next, rawPoints: [p.x, p.y] }
     setLiveStroke(next)
   }
 
+  /**
+   * Append a point to the stroke, applying a simple trailing-average smoother.
+   */
   const appendPoint = (stage: Konva.Stage) => {
     const pointer = stage.getPointerPosition()
     if (!pointer) return
@@ -56,6 +75,7 @@ export default function useDrawing({
     const lastY = rawPoints[rawPoints.length - 1]
     const dx = p.x - lastX
     const dy = p.y - lastY
+    // Ignore points that are too close to reduce noise and file size.
     if (Math.hypot(dx, dy) < minPointDistance) return
 
     const nextRaw = [...rawPoints, p.x, p.y]
@@ -79,6 +99,7 @@ export default function useDrawing({
     setIsDrawing(false)
     const current = currentStrokeRef.current
     if (current) {
+      // Persist the final stroke into the shared strokes array.
       setStrokes((prev) => [...prev, current.stroke])
     }
     currentStrokeRef.current = null

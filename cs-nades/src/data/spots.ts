@@ -1,3 +1,6 @@
+/**
+ * Sample spot data for local development and fallback UI.
+ */
 export type NadeSpot = {
   id: string
   map: string
@@ -5,14 +8,16 @@ export type NadeSpot = {
   title: string
   x: number
   y: number
-  videoPath: string // e.g. "mirage/window-smoke.mp4"
+  // Video path relative to the storage bucket (e.g. "mirage/window-smoke.mp4").
+  videoPath: string
 }
 
+// Placeholder spots used when not loading from Supabase.
 export const spots: NadeSpot[] = [
   {
     id: "mirage-smoke",
     map: "mirage",
-    type: "smoke",  
+    type: "smoke",
     title: "Mirage Smoke",
     x: 612,
     y: 330,
