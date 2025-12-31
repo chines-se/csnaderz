@@ -2,8 +2,8 @@
 @tailwind utilities;
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
-{/*@tailwind base;*/}
-{/* @tailwind components;*/}
+/*@tailwind base;*/
+/* @tailwind components;*/
 
 :root {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
