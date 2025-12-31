@@ -37,14 +37,24 @@ function ModeButton({
       type="button"
       onClick={onClick}
       className={cx(
-        "px-3 py-2 text-sm font-medium transition",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
+        "group relative overflow-hidden rounded-xl px-3 py-2 text-sm font-medium",
+        "transition-all duration-300 ease-out",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+        "hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-15px_rgba(255,255,255,0.6)]",
+        "active:translate-y-0 active:scale-[0.98]",
         active
-          ? "bg-white text-zinc-900"
-          : "bg-transparent text-zinc-200 hover:bg-white/10"
+          ? "bg-white text-zinc-900 shadow-[0_12px_30px_-18px_rgba(255,255,255,0.9)]"
+          : "bg-white/5 text-zinc-200 hover:bg-white/10"
       )}
     >
-      {children}
+      <span
+        className={cx(
+          "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300",
+          "bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]",
+          "group-hover:opacity-100"
+        )}
+      />
+      <span className="relative z-10">{children}</span>
     </button>
   )
 }
@@ -166,22 +176,6 @@ export default function MapPage() {
           </div>
 
           <div className="flex-1" />
-
-          {/* Right side: mode segmented control */}
-          <div className="inline-flex overflow-hidden rounded-xl border border-white/10 bg-zinc-900 p-1">
-            <ModeButton active={mode === "browse"} onClick={() => setMode("browse")}>
-              Browse
-            </ModeButton>
-            <ModeButton active={mode === "place"} onClick={() => setMode("place")}>
-              Place
-            </ModeButton>
-            <ModeButton active={mode === "edit"} onClick={() => setMode("edit")}>
-              Edit
-            </ModeButton>
-            <ModeButton active={mode === "draw"} onClick={() => setMode("draw")}>
-              Draw
-            </ModeButton>
-          </div>
         </div>
       </header>
 
@@ -389,40 +383,60 @@ export default function MapPage() {
               }}
             />
 
-            {/* This ref measures available width for responsive sizing */}
-            <div ref={mapAreaRef} className="w-full">
-              {/* Centered map "frame" */}
-              <div className="mx-auto w-fit rounded-2xl border border-white/10 bg-zinc-900 p-3">
-                <KonvaMap
-                  mapImageUrl={`/maps/${map}.png`}
-                  // Responsive stage size (scales down on smaller screens)
-                  width={stageSize}
-                  height={stageSize}
-                  // Keep nativeSize constant so stored coords remain consistent.
-                  nativeSize={1200}
-                  spots={mapSpots}
-                  mode={mode}
-                  placementType={placementType}
-                  snapToGrid={snap}
-                  // Grid size in native map units for snapping markers.
-                  gridSize={20}
-                  strokes={strokes}
-                  setStrokes={setStrokes}
-                  onSelectSpot={(s) => {
-                    if (mode === "browse") setSelected(s)
-                  }}
-                  onPlaceSpot={({ x, y, type }) => {
-                    // In Place mode, clicking opens your Create modal
-                    console.log("place click received:", { x, y, type })
-                    setPending({ x, y, type })
-                  }}
-                  onMoveSpot={async (id, x, y) => {
-                    await updateSpot(id, { x, y })
-                  }}
-                  onDeleteSpot={async (id) => {
-                    await deleteSpot(id)
-                  }}
-                />
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+              <div className="flex w-full flex-wrap gap-2 lg:w-32 lg:flex-col">
+                <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Modes
+                </div>
+                <ModeButton active={mode === "browse"} onClick={() => setMode("browse")}>
+                  Browse
+                </ModeButton>
+                <ModeButton active={mode === "place"} onClick={() => setMode("place")}>
+                  Place
+                </ModeButton>
+                <ModeButton active={mode === "edit"} onClick={() => setMode("edit")}>
+                  Edit
+                </ModeButton>
+                <ModeButton active={mode === "draw"} onClick={() => setMode("draw")}>
+                  Draw
+                </ModeButton>
+              </div>
+
+              {/* This ref measures available width for responsive sizing */}
+              <div ref={mapAreaRef} className="w-full">
+                {/* Centered map "frame" */}
+                <div className="mx-auto w-fit rounded-2xl border border-white/10 bg-zinc-900 p-3">
+                  <KonvaMap
+                    mapImageUrl={`/maps/${map}.png`}
+                    // Responsive stage size (scales down on smaller screens)
+                    width={stageSize}
+                    height={stageSize}
+                    // Keep nativeSize constant so stored coords remain consistent.
+                    nativeSize={1200}
+                    spots={mapSpots}
+                    mode={mode}
+                    placementType={placementType}
+                    snapToGrid={snap}
+                    // Grid size in native map units for snapping markers.
+                    gridSize={20}
+                    strokes={strokes}
+                    setStrokes={setStrokes}
+                    onSelectSpot={(s) => {
+                      if (mode === "browse") setSelected(s)
+                    }}
+                    onPlaceSpot={({ x, y, type }) => {
+                      // In Place mode, clicking opens your Create modal
+                      console.log("place click received:", { x, y, type })
+                      setPending({ x, y, type })
+                    }}
+                    onMoveSpot={async (id, x, y) => {
+                      await updateSpot(id, { x, y })
+                    }}
+                    onDeleteSpot={async (id) => {
+                      await deleteSpot(id)
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
